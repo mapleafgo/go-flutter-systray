@@ -65,7 +65,7 @@ packages:
     source: hosted
     version: "1.4.2"
   build_runner:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: build_runner
       url: "https://pub.flutter-io.cn"
@@ -163,7 +163,7 @@ packages:
     source: hosted
     version: "1.0.0"
   dart_json_mapper:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: dart_json_mapper
       url: "https://pub.flutter-io.cn"

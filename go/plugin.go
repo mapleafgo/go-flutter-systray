@@ -2,6 +2,7 @@ package go_flutter_systray
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/getlantern/systray"
 	flutter "github.com/go-flutter-desktop/go-flutter"
@@ -35,6 +36,7 @@ func (p *GoFlutterSystrayPlugin) InitPlugin(messenger plugin.BinaryMessenger) er
 	p.channel.HandleFunc("hideWindow", p.hideWindow)
 	p.channel.HandleFunc("showWindow", p.showWindow)
 	p.channel.HandleFunc("runSystray", p.runSystray)
+	p.channel.HandleFunc("quit", p.quit)
 
 	p.channel.HandleFunc("setIcon", p.setIcon)
 	p.channel.HandleFunc("setTitle", p.setTitle)
@@ -72,22 +74,32 @@ func (p *GoFlutterSystrayPlugin) showWindow(arguments interface{}) (reply interf
 }
 
 func (p *GoFlutterSystrayPlugin) runSystray(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var mainMenu MenuItemEntry
-	exitMethod := params[1].(string)
+	params := arguments.([]interface{})
+
+	mainMenu := &MenuItemEntry{}
 	if err := json.Unmarshal([]byte(params[0].(string)), &mainMenu); err != nil {
 		return nil, err
 	}
-	systray.Run(func() {
+	exitMethod := params[1].(string)
+
+	onReady := func() {
 		systray.SetIcon(mainMenu.Icon)
 		systray.SetTitle(mainMenu.Title)
 		systray.SetTooltip(mainMenu.Tooltip)
+		if len(mainMenu.Child) > 0 {
+			p.menuList = make(map[string]*systray.MenuItem)
+		}
 		for _, item := range mainMenu.Child {
 			p.menuList[item.Key] = p.putMenuItem(nil, item)
 		}
-	}, func() {
-		p.callHandler(exitMethod, nil)
-	})
+	}
+	onExit := func() {
+		if err := p.callHandler(exitMethod, nil); err != nil {
+			log.Panicln(err)
+		}
+	}
+
+	go systray.Run(onReady, onExit)
 	return nil, nil
 }
 
@@ -98,9 +110,12 @@ func (p *GoFlutterSystrayPlugin) putMenuItem(menuItem *systray.MenuItem, entry M
 	} else {
 		menu = menuItem.AddSubMenuItem(entry.Title, entry.Tooltip)
 	}
-	menu.SetIcon(entry.Icon)
+	if len(entry.Icon) != 0 {
+		menu.SetIcon(entry.Icon)
+	}
+	go p.startChan(entry.Key, menu)
 	for _, item := range entry.Child {
-		if item.Key == "" {
+		if item.Key == "" && menuItem == nil {
 			systray.AddSeparator()
 		} else {
 			p.menuList[item.Key] = p.putMenuItem(menu, item)
@@ -109,89 +124,103 @@ func (p *GoFlutterSystrayPlugin) putMenuItem(menuItem *systray.MenuItem, entry M
 	return menu
 }
 
+func (p *GoFlutterSystrayPlugin) startChan(key string, menu *systray.MenuItem) {
+	for {
+		<-menu.ClickedCh
+		if err := p.callHandler(key, nil); err != nil {
+			log.Panicln(err)
+		}
+	}
+}
+
+func (p *GoFlutterSystrayPlugin) quit(arguments interface{}) (reply interface{}, err error) {
+	systray.Quit()
+	return nil, nil
+}
+
 func (p *GoFlutterSystrayPlugin) setIcon(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	iconBytes := params[0].([]byte)
-	systray.SetIcon(iconBytes)
+	params := arguments.([]interface{})
+	key, iconBytes := params[0].(string), params[1].([]byte)
+	if key == "main" {
+		systray.SetIcon(iconBytes)
+	} else {
+		p.menuList[key].SetIcon(iconBytes)
+	}
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) setTitle(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var title string
-	title = params[0].(string)
-	systray.SetTitle(title)
+	params := arguments.([]interface{})
+	key, title := params[0].(string), params[1].(string)
+	if key == "main" {
+		systray.SetTitle(title)
+	} else {
+		p.menuList[key].SetTitle(title)
+	}
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) setTooltip(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key, tooltip := params[0].(string), params[1].(string)
+	if key == "main" {
+		systray.SetTooltip(tooltip)
+	} else {
+		p.menuList[key].SetTooltip(tooltip)
+	}
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemCheck(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Check()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemUncheck(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Uncheck()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemChecked(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
-	return nil, nil
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	return p.menuList[key].Checked(), nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemDisable(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Disable()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemEnable(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Enable()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemDisabled(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
-	return nil, nil
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	return p.menuList[key].Disabled(), nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemHide(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Hide()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) itemShow(arguments interface{}) (reply interface{}, err error) {
-	params, _ := arguments.([]interface{})
-	var tooltip string
-	tooltip = params[0].(string)
-	systray.SetTooltip(tooltip)
+	params := arguments.([]interface{})
+	key := params[0].(string)
+	p.menuList[key].Show()
 	return nil, nil
 }

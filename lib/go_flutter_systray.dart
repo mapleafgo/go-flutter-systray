@@ -10,11 +10,26 @@ import 'package:dart_json_mapper/dart_json_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'model/menu_item_bean.dart';
+import 'model/menu_item.dart';
 
 class GoFlutterSystray {
   static const MethodChannel _channel =
       const MethodChannel('go_flutter_systray');
+  static final Map<String, Function> _callHanders = {};
+
+  static void registerCallBack(String name, Function callback) =>
+      _callHanders[name] = callback;
+
+  static void removeCallBack(String name) => _callHanders.remove(name);
+
+  static void initSystray() {
+    _channel.setMethodCallHandler((MethodCall call) async {
+      print("调用了${call.method}");
+      if (_callHanders.containsKey(call.method)) {
+        _callHanders[call.method]();
+      }
+    });
+  }
 
   static Future<void> hideWindow() => _channel.invokeMethod('hideWindow');
 
@@ -23,11 +38,14 @@ class GoFlutterSystray {
   static Future<void> runSystray({
     @required MenuItem menu,
     @required String exitMethod,
-  }) =>
-      _channel.invokeMethod(
-        'runSystray',
-        [JsonMapper.serialize(menu), exitMethod],
-      );
+  }) {
+    return _channel.invokeMethod(
+      'runSystray',
+      [JsonMapper.serialize(menu), exitMethod],
+    );
+  }
+
+  static Future<void> quit() => _channel.invokeMethod('quit');
 
   static Future<void> setIcon({
     @required String key,
