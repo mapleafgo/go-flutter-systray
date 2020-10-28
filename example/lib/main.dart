@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:dart_json_mapper/dart_json_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_flutter_systray/go_flutter_systray.dart';
