@@ -31,17 +31,22 @@ class _MyAppState extends State<MyApp> {
         tooltip: "GoFlutterSystray",
         child: [
           MenuItem(key: "showWindow", title: "Show", tooltip: "Show"),
-          MenuItem(key: "quit", title: "退出", tooltip: "退出"),
+          MenuItem.separator(),
+          MenuItem(
+            key: GoFlutterSystray.quitCallMethod,
+            title: "退出",
+            tooltip: "退出",
+          ),
         ],
       );
-      await GoFlutterSystray.runSystray(menu: menu, exitMethod: "quit");
+      await GoFlutterSystray.runSystray(menu);
       GoFlutterSystray.registerCallBack(
         "showWindow",
-        () => GoFlutterSystray.showWindow(),
+        GoFlutterSystray.showWindow,
       );
       GoFlutterSystray.registerCallBack(
-        "quit",
-        () => GoFlutterSystray.quit(),
+        GoFlutterSystray.quitCallMethod,
+        GoFlutterSystray.exitWindow,
       );
     });
   }
@@ -54,15 +59,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Column(
-            children: [
-              Text("这是一个托盘菜单的实例应用"),
-              RaisedButton(
-                child: Text("HideWindow"),
-                onPressed: GoFlutterSystray.hideWindow,
-              ),
-            ],
-          ),
+          child: Text("这是一个 go_flutter_systray 的示例应用"),
         ),
       ),
     );
