@@ -31,6 +31,7 @@ class _MyAppState extends State<MyApp> {
         tooltip: "GoFlutterSystray",
         child: [
           MenuItem(key: "showWindow", title: "Show", tooltip: "Show"),
+          MenuItem(key: "check", title: "Check", tooltip: "Check"),
           MenuItem.separator(),
           MenuItem(
             key: GoFlutterSystray.quitCallMethod,
@@ -43,6 +44,17 @@ class _MyAppState extends State<MyApp> {
       GoFlutterSystray.registerCallBack(
         "showWindow",
         GoFlutterSystray.showWindow,
+      );
+      GoFlutterSystray.registerCallBack(
+        "check",
+        () async {
+          const key = "check";
+          if (await GoFlutterSystray.itemChecked(key)) {
+            GoFlutterSystray.itemUncheck(key);
+          } else {
+            GoFlutterSystray.itemCheck(key);
+          }
+        },
       );
       GoFlutterSystray.registerCallBack(
         GoFlutterSystray.quitCallMethod,
