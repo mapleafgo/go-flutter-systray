@@ -12,6 +12,7 @@ class MenuItem {
   Uint8List _icon;
   String _title;
   String _tooltip;
+  bool _isCheckbox;
   List<MenuItem> child;
 
   MenuItem({
@@ -19,6 +20,7 @@ class MenuItem {
     Uint8List icon,
     String title,
     String tooltip,
+    bool isCheckbox,
     List<MenuItem> child,
   }) {
     this.key = key;
@@ -26,6 +28,7 @@ class MenuItem {
     _icon = icon;
     _title = title;
     _tooltip = tooltip;
+    _isCheckbox = isCheckbox;
   }
 
   factory MenuItem.main({
@@ -64,6 +67,13 @@ class MenuItem {
   }
 
   get tooltip => _tooltip;
+
+  set isCheckbox(bool isCheckbox) {
+    GoFlutterSystray.setTooltip(key: key, tooltip: tooltip);
+    _isCheckbox = isCheckbox;
+  }
+
+  get isCheckbox => _isCheckbox;
 
   Future<void> check() => GoFlutterSystray.itemCheck(key);
 

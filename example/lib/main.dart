@@ -31,7 +31,12 @@ class _MyAppState extends State<MyApp> {
         tooltip: "GoFlutterSystray",
         child: [
           MenuItem(key: "showWindow", title: "Show", tooltip: "Show"),
-          MenuItem(key: "check", title: "Check", tooltip: "Check"),
+          MenuItem(
+            key: "check",
+            title: "Check",
+            tooltip: "Check",
+            isCheckbox: true,
+          ),
           MenuItem.separator(),
           MenuItem(
             key: GoFlutterSystray.quitCallMethod,

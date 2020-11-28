@@ -14,11 +14,12 @@ const channelName = "go_flutter_systray"
 
 // MenuItemEntry menuitem
 type MenuItemEntry struct {
-	Key     string          `json:"key"`
-	Icon    []byte          `json:"icon"`
-	Title   string          `json:"title"`
-	Tooltip string          `json:"tooltip"`
-	Child   []MenuItemEntry `json:"child"`
+	Key        string          `json:"key"`
+	Icon       []byte          `json:"icon"`
+	Title      string          `json:"title"`
+	Tooltip    string          `json:"tooltip"`
+	IsCheckbox bool            `json:"isCheckbox"`
+	Child      []MenuItemEntry `json:"child"`
 }
 
 const (
@@ -132,9 +133,17 @@ func (p *GoFlutterSystrayPlugin) putMenuItem(menuItem *systray.MenuItem, entry M
 	}
 
 	if menuItem == nil {
-		menu = systray.AddMenuItem(entry.Title, entry.Tooltip)
+		if entry.IsCheckbox {
+			menu = systray.AddMenuItemCheckbox(entry.Title, entry.Tooltip, false)
+		} else {
+			menu = systray.AddMenuItem(entry.Title, entry.Tooltip)
+		}
 	} else {
-		menu = menuItem.AddSubMenuItem(entry.Title, entry.Tooltip)
+		if entry.IsCheckbox {
+			menu = menuItem.AddSubMenuItemCheckbox(entry.Title, entry.Tooltip, false)
+		} else {
+			menu = menuItem.AddSubMenuItem(entry.Title, entry.Tooltip)
+		}
 	}
 	p.menuList[entry.Key] = menu
 	if entry.Icon != nil {
