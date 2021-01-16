@@ -27,7 +27,11 @@ const (
 	mainMenuKey    string = "main"
 )
 
+// isSureExit 是否退出
 var isSureExit bool
+
+// isInit 是否初始化过
+var isInit bool
 
 // GoFlutterSystrayPlugin implements flutter.Plugin and handles method.
 type GoFlutterSystrayPlugin struct {
@@ -37,6 +41,7 @@ type GoFlutterSystrayPlugin struct {
 	menuList   map[string]*systray.MenuItem
 }
 
+// Default 默认接管窗口关闭
 var Default = &GoFlutterSystrayPlugin{
 	filterExit: true,
 }
@@ -83,23 +88,27 @@ func (p *GoFlutterSystrayPlugin) callHandler(methodName string, arguments interf
 	return p.channel.InvokeMethod(methodName, arguments)
 }
 
-func (p *GoFlutterSystrayPlugin) exitWindow(arguments interface{}) (reply interface{}, err error) {
+func (p *GoFlutterSystrayPlugin) exitWindow(interface{}) (reply interface{}, err error) {
 	isSureExit = true
 	p.window.SetShouldClose(true)
 	return nil, nil
 }
 
-func (p *GoFlutterSystrayPlugin) hideWindow(arguments interface{}) (reply interface{}, err error) {
+func (p *GoFlutterSystrayPlugin) hideWindow(interface{}) (reply interface{}, err error) {
 	p.window.Hide()
 	return nil, nil
 }
 
-func (p *GoFlutterSystrayPlugin) showWindow(arguments interface{}) (reply interface{}, err error) {
+func (p *GoFlutterSystrayPlugin) showWindow(interface{}) (reply interface{}, err error) {
 	p.window.Show()
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) runSystray(arguments interface{}) (reply interface{}, err error) {
+	if isInit {
+		log.Print("do not repeat initialization")
+		return
+	}
 	mainMenu := &MenuItemEntry{}
 	if err := json.Unmarshal([]byte(arguments.(string)), &mainMenu); err != nil {
 		return nil, err
@@ -115,17 +124,19 @@ func (p *GoFlutterSystrayPlugin) runSystray(arguments interface{}) (reply interf
 				p.putMenuItem(nil, item)
 			}
 		}
+		// 初始化完成
+		isInit = true
 	}
 
 	go systray.Run(onReady, func() {
-		p.callHandler(quitCallMethod, nil)
+		_ = p.callHandler(quitCallMethod, nil)
 	})
 	return nil, nil
 }
 
 func (p *GoFlutterSystrayPlugin) putMenuItem(menuItem *systray.MenuItem, entry MenuItemEntry) {
 	var menu *systray.MenuItem
-	if entry.Key == "" {
+	if len(entry.Key) == 0 {
 		if menuItem == nil {
 			systray.AddSeparator()
 		}
@@ -165,7 +176,7 @@ func (p *GoFlutterSystrayPlugin) startChan(key string, menu *systray.MenuItem) {
 	}
 }
 
-func (p *GoFlutterSystrayPlugin) quitSystray(arguments interface{}) (reply interface{}, err error) {
+func (p *GoFlutterSystrayPlugin) quitSystray(interface{}) (reply interface{}, err error) {
 	systray.Quit()
 	return nil, nil
 }
