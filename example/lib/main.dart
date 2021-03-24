@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
         "check",
         () async {
           const key = "check";
-          if (await GoFlutterSystray.itemChecked(key)) {
+          if (await GoFlutterSystray.itemChecked(key) == true) {
             GoFlutterSystray.itemUncheck(key);
           } else {
             GoFlutterSystray.itemCheck(key);

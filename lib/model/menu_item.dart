@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:dart_json_mapper/dart_json_mapper.dart';
-import 'package:flutter/material.dart';
 import 'package:go_flutter_systray/go_flutter_systray.dart';
 
 import '../go_flutter_systray.dart';
@@ -9,33 +8,31 @@ import '../go_flutter_systray.dart';
 @JsonSerializable()
 class MenuItem {
   String key;
-  Uint8List _icon;
-  String _title;
-  String _tooltip;
-  bool _isCheckbox;
-  List<MenuItem> child;
+  Uint8List? _icon;
+  String? _title;
+  String? _tooltip;
+  late bool _isCheckbox;
+  List<MenuItem>? child;
 
   MenuItem({
-    @required String key,
-    Uint8List icon,
-    String title,
-    String tooltip,
-    bool isCheckbox,
-    List<MenuItem> child,
+    required this.key,
+    this.child,
+    String? title,
+    Uint8List? icon,
+    String? tooltip,
+    bool? isCheckbox,
   }) {
-    this.key = key;
-    this.child = child;
     _icon = icon;
     _title = title;
-    _tooltip = tooltip;
-    _isCheckbox = isCheckbox;
+    _tooltip = tooltip ?? title;
+    _isCheckbox = isCheckbox ?? false;
   }
 
   factory MenuItem.main({
-    @required Uint8List icon,
-    @required List<MenuItem> child,
-    String title,
-    String tooltip,
+    required Uint8List icon,
+    required List<MenuItem> child,
+    required String title,
+    required String tooltip,
   }) =>
       MenuItem(
         key: "main",
@@ -47,45 +44,49 @@ class MenuItem {
 
   factory MenuItem.separator() => MenuItem(key: "");
 
-  set icon(Uint8List iconBytes) {
-    GoFlutterSystray.setIcon(key: key, iconBytes: iconBytes);
-    _icon = iconBytes;
+  setIcon(Uint8List icon) {
+    GoFlutterSystray.setIcon(key: key, iconBytes: icon);
+    _icon = icon;
   }
 
-  get icon => _icon;
+  Uint8List? get icon => _icon;
 
-  set title(String titleStr) {
-    GoFlutterSystray.setTitle(key: key, title: titleStr);
-    _title = titleStr;
+  setTitle(String title) {
+    GoFlutterSystray.setTitle(key: key, title: title);
+    _title = title;
   }
 
-  get title => _title;
+  String? get title => _title;
 
-  set tooltip(String tooltipStr) {
+  setTooltip(String tooltip) {
     GoFlutterSystray.setTooltip(key: key, tooltip: tooltip);
-    _tooltip = tooltipStr;
+    _tooltip = tooltip;
   }
 
-  get tooltip => _tooltip;
+  String? get tooltip => _tooltip;
 
-  set isCheckbox(bool isCheckbox) {
-    GoFlutterSystray.setTooltip(key: key, tooltip: tooltip);
+  setCheckbox(bool isCheckbox) {
+    if (isCheckbox) {
+      GoFlutterSystray.itemCheck(key);
+    } else {
+      GoFlutterSystray.itemUncheck(key);
+    }
     _isCheckbox = isCheckbox;
   }
 
-  get isCheckbox => _isCheckbox;
+  bool get isCheckbox => _isCheckbox;
 
   Future<void> check() => GoFlutterSystray.itemCheck(key);
 
   Future<void> uncheck() => GoFlutterSystray.itemUncheck(key);
 
-  Future<bool> checked() => GoFlutterSystray.itemChecked(key);
+  Future<bool?> checked() => GoFlutterSystray.itemChecked(key);
 
   Future<void> disable() => GoFlutterSystray.itemDisable(key);
 
   Future<void> enable() => GoFlutterSystray.itemEnable(key);
 
-  Future<bool> disabled() => GoFlutterSystray.itemDisabled(key);
+  Future<bool?> disabled() => GoFlutterSystray.itemDisabled(key);
 
   Future<void> hide() => GoFlutterSystray.itemHide(key);
 

@@ -7,7 +7,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dart_json_mapper/dart_json_mapper.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'model/menu_item.dart';
@@ -29,62 +28,62 @@ class GoFlutterSystray {
   static void initSystray() {
     _channel.setMethodCallHandler((MethodCall call) async {
       if (_callHanders.containsKey(call.method)) {
-        _callHanders[call.method]();
+        _callHanders[call.method]!();
       }
     });
   }
 
-  static Future<void> hideWindow() => _channel.invokeMethod('hideWindow');
+  static Future<void> hideWindow() => _channel.invokeMethod<void>('hideWindow');
 
-  static Future<void> showWindow() => _channel.invokeMethod('showWindow');
+  static Future<void> showWindow() => _channel.invokeMethod<void>('showWindow');
 
-  static Future<void> exitWindow() => _channel.invokeMethod('exitWindow');
+  static Future<void> exitWindow() => _channel.invokeMethod<void>('exitWindow');
 
-  static Future<void> runSystray(MenuItem menu) {
-    return _channel.invokeMethod('runSystray', JsonMapper.serialize(menu));
-  }
+  static Future<void> runSystray(MenuItem menu) =>
+      _channel.invokeMethod<void>('runSystray', JsonMapper.serialize(menu));
 
-  static Future<void> quitSystray() => _channel.invokeMethod('quitSystray');
+  static Future<void> quitSystray() =>
+      _channel.invokeMethod<void>('quitSystray');
 
   static Future<void> setIcon({
-    @required String key,
-    @required Uint8List iconBytes,
+    required String key,
+    required Uint8List iconBytes,
   }) =>
-      _channel.invokeMethod('setIcon', [key, iconBytes]);
+      _channel.invokeMethod<void>('setIcon', [key, iconBytes]);
 
   static Future<void> setTitle({
-    @required String key,
-    @required String title,
+    required String key,
+    required String title,
   }) =>
-      _channel.invokeMethod('setTitle', [key, title]);
+      _channel.invokeMethod<void>('setTitle', [key, title]);
 
   static Future<void> setTooltip({
-    @required String key,
-    @required String tooltip,
+    required String key,
+    required String tooltip,
   }) =>
-      _channel.invokeMethod('setTooltip', [key, tooltip]);
+      _channel.invokeMethod<void>('setTooltip', [key, tooltip]);
 
   static Future<void> itemCheck(String key) =>
-      _channel.invokeMethod('itemCheck', key);
+      _channel.invokeMethod<void>('itemCheck', key);
 
   static Future<void> itemUncheck(String key) =>
-      _channel.invokeMethod<bool>('itemUncheck', key);
+      _channel.invokeMethod<void>('itemUncheck', key);
 
-  static Future<bool> itemChecked(String key) =>
+  static Future<bool?> itemChecked(String key) =>
       _channel.invokeMethod<bool>('itemChecked', key);
 
   static Future<void> itemDisable(String key) =>
-      _channel.invokeMethod<bool>('itemDisable', key);
+      _channel.invokeMethod<void>('itemDisable', key);
 
   static Future<void> itemEnable(String key) =>
-      _channel.invokeMethod<bool>('itemEnable', key);
+      _channel.invokeMethod<void>('itemEnable', key);
 
-  static Future<bool> itemDisabled(String key) =>
+  static Future<bool?> itemDisabled(String key) =>
       _channel.invokeMethod<bool>('itemDisabled', key);
 
   static Future<void> itemHide(String key) =>
-      _channel.invokeMethod<bool>('itemHide', key);
+      _channel.invokeMethod<void>('itemHide', key);
 
   static Future<void> itemShow(String key) =>
-      _channel.invokeMethod<bool>('itemShow', key);
+      _channel.invokeMethod<void>('itemShow', key);
 }
