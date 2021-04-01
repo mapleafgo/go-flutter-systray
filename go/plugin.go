@@ -1,8 +1,10 @@
 package go_flutter_systray
 
 import (
+	"context"
 	"encoding/json"
 	"log"
+	"sync"
 
 	"github.com/getlantern/systray"
 	flutter "github.com/go-flutter-desktop/go-flutter"
@@ -30,11 +32,11 @@ const (
 // isSureExit 是否退出
 var isSureExit bool
 
-// isInit 是否初始化过
-var isInit bool
-
 // GoFlutterSystrayPlugin implements flutter.Plugin and handles method.
 type GoFlutterSystrayPlugin struct {
+	cxt        context.Context
+	cancel     context.CancelFunc
+	initLock   sync.Mutex
 	filterExit bool
 	channel    *plugin.MethodChannel
 	window     *glfw.Window
@@ -50,6 +52,8 @@ var _ flutter.Plugin = &GoFlutterSystrayPlugin{} // compile-time type check
 
 // InitPlugin initializes the plugin.
 func (p *GoFlutterSystrayPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
+	p.cxt = context.Background()
+	systray.Register(nil, nil)
 	p.channel = plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	p.channel.HandleFunc("hideWindow", p.hideWindow)
 	p.channel.HandleFunc("showWindow", p.showWindow)
@@ -105,73 +109,75 @@ func (p *GoFlutterSystrayPlugin) showWindow(interface{}) (reply interface{}, err
 }
 
 func (p *GoFlutterSystrayPlugin) runSystray(arguments interface{}) (reply interface{}, err error) {
-	if isInit {
-		log.Print("do not repeat initialization")
-		return
+	p.initLock.Lock()
+	defer p.initLock.Unlock()
+	if p.cancel != nil {
+		p.cancel()
 	}
+	cxt, cancel := context.WithCancel(p.cxt)
+	p.cancel = cancel
+
 	mainMenu := &MenuItemEntry{}
 	if err := json.Unmarshal([]byte(arguments.(string)), &mainMenu); err != nil {
 		return nil, err
 	}
 
-	onReady := func() {
-		systray.SetIcon(mainMenu.Icon)
-		systray.SetTitle(mainMenu.Title)
-		systray.SetTooltip(mainMenu.Tooltip)
-		if len(mainMenu.Child) > 0 {
-			p.menuList = make(map[string]*systray.MenuItem)
-			for _, item := range mainMenu.Child {
-				p.putMenuItem(nil, item)
-			}
+	systray.SetIcon(mainMenu.Icon)
+	systray.SetTitle(mainMenu.Title)
+	systray.SetTooltip(mainMenu.Tooltip)
+	if len(mainMenu.Child) > 0 {
+		p.menuList = make(map[string]*systray.MenuItem)
+		for _, item := range mainMenu.Child {
+			p.putMenuItem(cxt, item, nil)
 		}
-		// 初始化完成
-		isInit = true
 	}
 
-	systray.Register(onReady, func() {
-		_ = p.callHandler(quitCallMethod, nil)
-	})
 	return nil, nil
 }
 
-func (p *GoFlutterSystrayPlugin) putMenuItem(menuItem *systray.MenuItem, entry MenuItemEntry) {
+func (p *GoFlutterSystrayPlugin) putMenuItem(cxt context.Context, entry MenuItemEntry, superMenu *systray.MenuItem) {
 	var menu *systray.MenuItem
-	if len(entry.Key) == 0 {
-		if menuItem == nil {
-			systray.AddSeparator()
-		}
-		return
-	}
 
-	if menuItem == nil {
-		if entry.IsCheckbox {
+	if superMenu == nil {
+		if len(entry.Key) == 0 {
+			systray.AddSeparator()
+			return
+		} else if entry.IsCheckbox {
 			menu = systray.AddMenuItemCheckbox(entry.Title, entry.Tooltip, false)
 		} else {
 			menu = systray.AddMenuItem(entry.Title, entry.Tooltip)
 		}
 	} else {
-		if entry.IsCheckbox {
-			menu = menuItem.AddSubMenuItemCheckbox(entry.Title, entry.Tooltip, false)
+		if len(entry.Key) == 0 {
+			return
+		} else if entry.IsCheckbox {
+			menu = superMenu.AddSubMenuItemCheckbox(entry.Title, entry.Tooltip, false)
 		} else {
-			menu = menuItem.AddSubMenuItem(entry.Title, entry.Tooltip)
+			menu = superMenu.AddSubMenuItem(entry.Title, entry.Tooltip)
 		}
 	}
-	p.menuList[entry.Key] = menu
+
 	if entry.Icon != nil {
 		menu.SetIcon(entry.Icon)
 	}
 
-	go p.startChan(entry.Key, menu)
+	p.menuList[entry.Key] = menu
+
+	go p.startChan(cxt, entry.Key, p.menuList[entry.Key])
 	for _, item := range entry.Child {
-		p.putMenuItem(menu, item)
+		p.putMenuItem(cxt, item, p.menuList[entry.Key])
 	}
 }
 
-func (p *GoFlutterSystrayPlugin) startChan(key string, menu *systray.MenuItem) {
+func (p *GoFlutterSystrayPlugin) startChan(cxt context.Context, key string, menu *systray.MenuItem) {
 	for {
-		<-menu.ClickedCh
-		if err := p.callHandler(key, nil); err != nil {
-			log.Panicln(err)
+		select {
+		case <-cxt.Done():
+			break
+		case <-menu.ClickedCh:
+			if err := p.callHandler(key, nil); err != nil {
+				log.Panicln(err)
+			}
 		}
 	}
 }

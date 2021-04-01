@@ -30,24 +30,15 @@ class _MyAppState extends State<MyApp> {
         title: "GoFlutterSystray",
         tooltip: "GoFlutterSystray",
         child: [
-          MenuItem(key: "showWindow", title: "Show", tooltip: "Show"),
-          MenuItem(
-            key: "check",
-            title: "Check",
-            tooltip: "Check",
-            isCheckbox: true,
-          ),
+          MenuItem(key: "window", title: "Show"),
+          MenuItem(key: "check", title: "Check", isCheckbox: true),
           MenuItem.separator(),
-          MenuItem(
-            key: GoFlutterSystray.quitCallMethod,
-            title: "退出",
-            tooltip: "退出",
-          ),
+          MenuItem(key: GoFlutterSystray.quitCallMethod, title: "退出"),
         ],
       );
       await GoFlutterSystray.runSystray(menu);
       GoFlutterSystray.registerCallBack(
-        "showWindow",
+        "window",
         GoFlutterSystray.showWindow,
       );
       GoFlutterSystray.registerCallBack(

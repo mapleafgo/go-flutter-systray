@@ -33,17 +33,17 @@ class GoFlutterSystray {
     });
   }
 
-  static Future<void> hideWindow() => _channel.invokeMethod<void>('hideWindow');
-
-  static Future<void> showWindow() => _channel.invokeMethod<void>('showWindow');
-
-  static Future<void> exitWindow() => _channel.invokeMethod<void>('exitWindow');
-
   static Future<void> runSystray(MenuItem menu) =>
       _channel.invokeMethod<void>('runSystray', JsonMapper.serialize(menu));
 
   static Future<void> quitSystray() =>
       _channel.invokeMethod<void>('quitSystray');
+
+  static Future<void> hideWindow() => _channel.invokeMethod<void>('hideWindow');
+
+  static Future<void> showWindow() => _channel.invokeMethod<void>('showWindow');
+
+  static Future<void> exitWindow() => _channel.invokeMethod<void>('exitWindow');
 
   static Future<void> setIcon({
     required String key,
