@@ -28,7 +28,6 @@ class _MyAppState extends State<MyApp> {
       var menu = MenuItem.main(
         icon: icon,
         title: "GoFlutterSystray",
-        tooltip: "GoFlutterSystray",
         child: [
           MenuItem(key: "window", title: "Show"),
           MenuItem(key: "check", title: "Check", isCheckbox: true),

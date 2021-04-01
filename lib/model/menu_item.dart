@@ -8,10 +8,10 @@ import '../go_flutter_systray.dart';
 @JsonSerializable()
 class MenuItem {
   String key;
+  late bool _isCheckbox;
   Uint8List? _icon;
   String? _title;
   String? _tooltip;
-  late bool _isCheckbox;
   List<MenuItem>? child;
 
   MenuItem({
@@ -32,7 +32,7 @@ class MenuItem {
     required Uint8List icon,
     required List<MenuItem> child,
     required String title,
-    required String tooltip,
+    String? tooltip,
   }) =>
       MenuItem(
         key: "main",
