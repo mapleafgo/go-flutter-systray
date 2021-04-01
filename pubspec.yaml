@@ -1,6 +1,6 @@
 name: go_flutter_systray
 description: A new flutter plugin project.
-version: 0.1.1
+version: 0.1.2
 author: mapleafgo
 homepage: https://github.com/mapleafgo/go-flutter-systray
 publish_to: https://pub.dartlang.org
@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dart_json_mapper: ^2.0.5
+  dart_json_mapper: ^2.0.6
 
 dev_dependencies:
   flutter_test:

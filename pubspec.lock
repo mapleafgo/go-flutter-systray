@@ -161,7 +161,7 @@ packages:
       name: dart_json_mapper
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.5"
+    version: "2.0.6"
   dart_style:
     dependency: transitive
     description:
