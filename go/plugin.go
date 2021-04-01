@@ -128,7 +128,7 @@ func (p *GoFlutterSystrayPlugin) runSystray(arguments interface{}) (reply interf
 		isInit = true
 	}
 
-	go systray.Run(onReady, func() {
+	systray.Register(onReady, func() {
 		_ = p.callHandler(quitCallMethod, nil)
 	})
 	return nil, nil
