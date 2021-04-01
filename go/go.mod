@@ -1,4 +1,4 @@
-module github.com/fanlide/go-flutter-systray/go
+module github.com/mapleafgo/go-flutter-systray/go
 
 go 1.15
 
