@@ -1,6 +1,6 @@
 name: go_flutter_systray
 description: A new flutter plugin project.
-version: 0.1.2
+version: 0.1.3
 author: mapleafgo
 homepage: https://github.com/mapleafgo/go-flutter-systray
 publish_to: https://pub.dartlang.org

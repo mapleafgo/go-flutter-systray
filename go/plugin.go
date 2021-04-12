@@ -53,7 +53,7 @@ var _ flutter.Plugin = &GoFlutterSystrayPlugin{} // compile-time type check
 // InitPlugin initializes the plugin.
 func (p *GoFlutterSystrayPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.cxt = context.Background()
-	systray.Register(nil, nil)
+	go systray.Run(nil, nil)
 	p.channel = plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	p.channel.HandleFunc("hideWindow", p.hideWindow)
 	p.channel.HandleFunc("showWindow", p.showWindow)
