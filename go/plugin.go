@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"runtime"
 	"sync"
 
 	"github.com/getlantern/systray"
@@ -53,7 +54,12 @@ var _ flutter.Plugin = &GoFlutterSystrayPlugin{} // compile-time type check
 // InitPlugin initializes the plugin.
 func (p *GoFlutterSystrayPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.cxt = context.Background()
-	go systray.Run(nil, nil)
+	switch runtime.GOOS {
+	case "windows":
+		systray.Register(nil, nil)
+	default:
+		go systray.Run(nil, nil)
+	}
 	p.channel = plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	p.channel.HandleFunc("hideWindow", p.hideWindow)
 	p.channel.HandleFunc("showWindow", p.showWindow)
