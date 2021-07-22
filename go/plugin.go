@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"runtime"
 	"sync"
 
-	"github.com/getlantern/systray"
 	flutter "github.com/go-flutter-desktop/go-flutter"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/mapleafgo/systray"
 )
 
 const channelName = "go_flutter_systray"
@@ -51,15 +50,13 @@ var Default = &GoFlutterSystrayPlugin{
 
 var _ flutter.Plugin = &GoFlutterSystrayPlugin{} // compile-time type check
 
+func init() {
+	systray.Register(nil, nil)
+}
+
 // InitPlugin initializes the plugin.
 func (p *GoFlutterSystrayPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.cxt = context.Background()
-	switch runtime.GOOS {
-	case "windows":
-		systray.Register(nil, nil)
-	default:
-		go systray.Run(nil, nil)
-	}
 	p.channel = plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	p.channel.HandleFunc("hideWindow", p.hideWindow)
 	p.channel.HandleFunc("showWindow", p.showWindow)
