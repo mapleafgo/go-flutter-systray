@@ -51,7 +51,7 @@ var Default = &GoFlutterSystrayPlugin{
 var _ flutter.Plugin = &GoFlutterSystrayPlugin{} // compile-time type check
 
 func init() {
-	systray.Register(nil, nil)
+	go systray.Run(nil, nil)
 }
 
 // InitPlugin initializes the plugin.
